@@ -1,0 +1,4 @@
+.coverage
+.pytest_cache
+test/__pycache__/
+src/__pycache__/
