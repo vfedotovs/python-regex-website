@@ -16,7 +16,10 @@ lint: ##  Lint code with pylint
 	pylint src/
 
 build: ##  Build docker container
-	docker build -t flask-regex-app .
+	docker build -t vfedotovsdocker/python-regex-website:latest .	
 
 run: ##  Run docker container locally
-	docker run -p 5000:5000 flask-regex-app
+	docker run -p 5000:5000 vfedotovsdocker/python-regex-website
+
+push: ##  Push container to dockerhub
+	docker push vfedotovsdocker/python-regex-website

@@ -1,10 +1,11 @@
 
-## How to build container
-docker build -t flask-regex-app .
+
+## Where to get latest docker image
+docker pull vfedotovsdocker/python-regex-website:latest
 
 
 ## How to run container locally 
-docker run -p 5000:5000 flask-regex-app
+docker run -p 5000:5000 vfedotovsdocker/python-regex-website
 
 
 ## How to access app locally
