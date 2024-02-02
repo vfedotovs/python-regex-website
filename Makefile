@@ -23,3 +23,12 @@ run: ##  Run docker container locally
 
 push: ##  Push container to dockerhub
 	docker push vfedotovsdocker/python-regex-website
+
+clean: ##  clean test files
+	@rm -rf .coverage 
+	@rm -rf .pytest_cache
+	@rm -rf test/__pycache__/
+	@rm -rf src/__pycache__/
+
+
+
