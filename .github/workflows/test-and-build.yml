@@ -36,6 +36,8 @@ jobs:
         run: make lint
       - name: Test with pytest
         run: make test version=${{ matrix.python-version }}
+      - name: Test coverage
+        run:  make cov
       - name: Build docker
         run: make build
       - name: Push Docker to Dockerhub
