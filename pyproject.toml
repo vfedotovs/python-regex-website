@@ -1,9 +1,11 @@
 [project]
-name = "regex-website"
-version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-    "pytest>=8.4.1",
-]
+name = "python-regex-website"
+version = "1.0.2"
+description = "A Python web app for regex testing"
+authors = [{ name = "vfedotovs", email = "vtrader@inbox.lv" }]
+dependencies = []
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "1.0.2"
+tag_format = "v$version"
