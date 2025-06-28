@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   bump-version:
@@ -25,16 +29,41 @@ jobs:
           python -m pip install --upgrade pip
           pip install commitizen
 
+      - name: Check for conventional commits
+        id: check-commits
+        run: |
+          # Get the latest tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LATEST_TAG" ]; then
+            # No tags exist, check if there are any conventional commits
+            if git log --grep="^feat\|^fix\|^breaking\|^docs\|^style\|^refactor\|^test\|^chore" --oneline | head -1; then
+              echo "has_commits=true" >> $GITHUB_OUTPUT
+            else
+              echo "has_commits=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            # Check if there are conventional commits since the latest tag
+            if git log ${LATEST_TAG}..HEAD --grep="^feat\|^fix\|^breaking\|^docs\|^style\|^refactor\|^test\|^chore" --oneline | head -1; then
+              echo "has_commits=true" >> $GITHUB_OUTPUT
+            else
+              echo "has_commits=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
       - name: Bump version with Commitizen
+        if: steps.check-commits.outputs.has_commits == 'true' || github.event_name == 'workflow_dispatch'
         run: cz bump --yes
 
       - name: Push bump commit and tag
+        if: steps.check-commits.outputs.has_commits == 'true' || github.event_name == 'workflow_dispatch'
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git push origin main --follow-tags
 
       - name: Create GitHub Release
+        if: steps.check-commits.outputs.has_commits == 'true' || github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
