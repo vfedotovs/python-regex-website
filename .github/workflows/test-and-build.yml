@@ -32,5 +32,11 @@ jobs:
         run: |
           sudo apt-get update
           make setup
-      - name: Build & Test
+      - name: Lint
+        run: make lint
+      - name: Test with pytest
         run: make test version=${{ matrix.python-version }}
+      - name: Build docker
+        run: make build
+      - name: Push Docker to Dockerhub
+        run: make push
