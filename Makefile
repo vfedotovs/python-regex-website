@@ -11,6 +11,7 @@ setup: ##  Performs env setup
 	uv venv
 	uv pip install -r src/requirements.txt
 	uv pip install pytest
+	uv pip install pytest-cov
 	uv pip install pylint
 	uv pip install pdoc
 
