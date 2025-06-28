@@ -6,6 +6,8 @@ This module contains configuration settings for different environments.
 
 import os
 
+# pylint: disable=too-few-public-methods
+
 
 class Config:
     """Base configuration class."""

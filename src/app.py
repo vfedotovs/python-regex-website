@@ -22,11 +22,10 @@ Routes:
 import os
 import re
 import logging
-from typing import Optional, List
-from flask import Flask, render_template, request, flash, redirect, url_for, abort
+from typing import List
+from flask import Flask, render_template, request
 from flask import Blueprint
 from flask_wtf.csrf import CSRFProtect
-from werkzeug.exceptions import BadRequest
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -35,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 def create_app(test_config=None):
     """Application factory pattern for Flask best practices."""
-    app = Flask(__name__)
+    app = Flask(__name__)  # pylint: disable=redefined-outer-name
 
     # Configuration
     app.config.from_mapping(
@@ -57,7 +56,7 @@ def create_app(test_config=None):
         pass
 
     # Initialize CSRF protection
-    csrf = CSRFProtect(app)
+    _csrf = CSRFProtect(app)
 
     # Register routes
     app.register_blueprint(main_bp)
@@ -99,8 +98,8 @@ def safe_regex_findall(pattern: str, text: str) -> List[str]:
         matches = re.findall(pattern, text)
         return matches if matches else []
     except re.error as e:
-        logger.warning(f"Regex error: {e} for pattern: {pattern}")
-        raise ValueError(f"Regex compilation error: {str(e)}")
+        logger.warning("Regex error: %s for pattern: %s ", e, pattern)
+        raise ValueError(f"Regex compilation error: {str(e)}")  # pylint: disable=raise-missing-from
 
 
 main_bp = Blueprint("main", __name__)
@@ -125,14 +124,16 @@ def index():
             matches = safe_regex_findall(pattern, text)
             regex_result = ", ".join(matches) if matches else "No matches found"
             logger.info(
-                f"Successful regex match: pattern='{pattern}', matches={len(matches)}"
+                "Successful regex match: pattern='%s',matches='%d'",
+                pattern,
+                len(matches),
             )
         except ValueError as e:
             error_message = str(e)
-            logger.warning(f"Validation error: {error_message}")
-        except Exception as e:
+            logger.warning("Validation error: %s ", error_message)
+        except Exception as e:  # pylint: disable=broad-exception-caught
             error_message = "An unexpected error occurred. Please try again."
-            logger.error(f"Unexpected error in regex matching: {e}")
+            logger.error("Unexpected error in regex matching: %s", e)
 
     return render_template(
         "index.html", regex_result=regex_result, error_message=error_message
@@ -140,19 +141,19 @@ def index():
 
 
 @main_bp.errorhandler(400)
-def bad_request(error):
+def bad_request(_error):
     """Handle bad request errors."""
     return render_template("error.html", error="Bad Request"), 400
 
 
 @main_bp.errorhandler(404)
-def not_found(error):
+def not_found(_error):
     """Handle not found errors."""
     return render_template("error.html", error="Page Not Found"), 404
 
 
 @main_bp.errorhandler(500)
-def internal_error(error):
+def internal_error(_error):
     """Handle internal server errors."""
     return render_template("error.html", error="Internal Server Error"), 500
 

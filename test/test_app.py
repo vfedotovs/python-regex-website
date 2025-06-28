@@ -1,6 +1,5 @@
 import pytest
 from flask import Flask
-from src.app import index  # Import your index function from your actual app file
 
 
 @pytest.fixture
