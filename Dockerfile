@@ -10,11 +10,16 @@ COPY ./src /app
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Make port 80 available to the world outside this container
+# Make port 5000 available to the world outside this container
 EXPOSE 5000
 
-# Define environment variable
-ENV NAME World
+# Define environment variables for Flask
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=production
+ENV FLASK_DEBUG=False
+ENV FLASK_HOST=0.0.0.0
+ENV FLASK_PORT=5000
+ENV SECRET_KEY=your-production-secret-key-change-this
 
 # Run app.py when the container launches
 CMD ["python", "app.py"]

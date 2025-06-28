@@ -26,7 +26,7 @@ cov: ##  Tests coverage for app
 
 
 build: ##  Build docker container
-	docker build -t vfedotovsdocker/python-regex-website:latest .	
+	docker build -t vfedotovsdocker/python-regex-website:latest .
 
 run: ##  Run docker container locally
 	docker run -p 5000:5000 vfedotovsdocker/python-regex-website
