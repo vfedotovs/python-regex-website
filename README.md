@@ -3,7 +3,7 @@
 This is example of demo web service using python for regex pattern matching.
 
 ## Screenshot
-
+![App Screenshot](docs/Screenshot_demo.png)
 
 ## Usage 
 
@@ -24,10 +24,4 @@ clean                 clean test files
 ## How to access app locally
 http://127.0.0.1:5000/
 
-
-## TODOs
-1. [x] Basic MVP code implemented
-2. [x] Improve better pattern and string text box sizes for visual improvement 
-3. [x] Improve matched output box 
-4. [x] Add most frequently used regex examples and python regex documentation link 
 
