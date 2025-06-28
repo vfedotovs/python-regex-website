@@ -8,6 +8,7 @@ help:  ## 💬 This help message
 setup: ##  Performs env setup 
 	curl -LsSf https://astral.sh/uv/install.sh | sh
 	uv --version
+	uv venv
 	uv pip install -r src/requirements.txt
 	uv pip install pytest
 	uv pip install pylint
