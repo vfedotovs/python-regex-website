@@ -1,25 +1,169 @@
-# TODO: add logging for this module
+"""
+app.py
 
-from flask import Flask, render_template, request
+A Flask web application for regex pattern matching.
+
+This module implements a Flask application with proper configuration,
+security measures, and error handling following best practices.
+
+Example:
+    $ flask run
+    Or with python:
+    $ python app.py
+
+Attributes:
+    app (Flask): The main Flask application object.
+
+Routes:
+    / (GET, POST): Regex pattern matching interface.
+"""
+
+# Blueprint for main routes
+import os
 import re
+import logging
+from typing import List
+from flask import Flask, render_template, request
+from flask import Blueprint
+from flask_wtf.csrf import CSRFProtect
 
-app = Flask(__name__)
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-@app.route('/', methods=['GET', 'POST'])
+def create_app(test_config=None):
+    """Application factory pattern for Flask best practices."""
+    app = Flask(__name__)  # pylint: disable=redefined-outer-name
+
+    # Configuration
+    app.config.from_mapping(
+        SECRET_KEY=os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production"),
+        DEBUG=os.environ.get("FLASK_DEBUG", "False").lower() == "true",
+    )
+
+    if test_config is None:
+        # Load the instance config, if it exists, when not testing
+        app.config.from_pyfile("config.py", silent=True)
+    else:
+        # Load the test config if passed in
+        app.config.update(test_config)
+
+    # Ensure the instance folder exists
+    try:
+        os.makedirs(app.instance_path)
+    except OSError:
+        pass
+
+    # Initialize CSRF protection
+    _csrf = CSRFProtect(app)
+
+    # Register routes
+    app.register_blueprint(main_bp)
+    return app
+
+
+def validate_regex_pattern(pattern: str) -> bool:
+    """Validate if the regex pattern is safe and valid."""
+    if not pattern or len(pattern) > 1000:  # Reasonable length limit
+        return False
+
+    # Check for potentially dangerous patterns
+    dangerous_patterns = [
+        r"^.*$",  # Matches everything
+        r".*",  # Greedy matching
+        r"(.+)\1+",  # Repeating groups
+    ]
+
+    for dangerous in dangerous_patterns:
+        if pattern == dangerous:
+            return False
+
+    try:
+        re.compile(pattern)
+        return True
+    except re.error:
+        return False
+
+
+def safe_regex_findall(pattern: str, text: str) -> List[str]:
+    """Safely perform regex findall operation with proper error handling."""
+    if not validate_regex_pattern(pattern):
+        raise ValueError("Invalid or unsafe regex pattern")
+
+    if not text or len(text) > 10000:  # Reasonable text length limit
+        raise ValueError("Text too long or empty")
+
+    try:
+        matches = re.findall(pattern, text)
+        return matches if matches else []
+    except re.error as e:
+        logger.warning("Regex error: %s for pattern: %s ", e, pattern)
+        raise ValueError(f"Regex compilation error: {str(e)}")  # pylint: disable=raise-missing-from
+
+
+main_bp = Blueprint("main", __name__)
+
+
+@main_bp.route("/", methods=["GET", "POST"])
 def index():
+    """Handle regex pattern matching requests."""
     regex_result = ""
-    if request.method == 'POST':
-        pattern = request.form['pattern']
-        text = request.form['text']
+    error_message = ""
+
+    if request.method == "POST":
         try:
-            regex_result = re.findall(pattern, text)
-            regex_result = ', '.join(regex_result)
-        except re.error:
-            regex_result = "Invalid regex pattern"
-    return render_template('index.html', regex_result=regex_result)
+            pattern = request.form.get("pattern", "").strip()
+            text = request.form.get("text", "").strip()
+            # Input validation
+            if not pattern:
+                raise ValueError("Regex pattern is required")
+            if not text:
+                raise ValueError("Text to search is required")
+            # Perform regex matching
+            matches = safe_regex_findall(pattern, text)
+            regex_result = ", ".join(matches) if matches else "No matches found"
+            logger.info(
+                "Successful regex match: pattern='%s',matches='%d'",
+                pattern,
+                len(matches),
+            )
+        except ValueError as e:
+            error_message = str(e)
+            logger.warning("Validation error: %s ", error_message)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            error_message = "An unexpected error occurred. Please try again."
+            logger.error("Unexpected error in regex matching: %s", e)
+
+    return render_template(
+        "index.html", regex_result=regex_result, error_message=error_message
+    )
 
 
-if __name__ == '__main__':
-    # app.run(debug=True)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+@main_bp.errorhandler(400)
+def bad_request(_error):
+    """Handle bad request errors."""
+    return render_template("error.html", error="Bad Request"), 400
+
+
+@main_bp.errorhandler(404)
+def not_found(_error):
+    """Handle not found errors."""
+    return render_template("error.html", error="Page Not Found"), 404
+
+
+@main_bp.errorhandler(500)
+def internal_error(_error):
+    """Handle internal server errors."""
+    return render_template("error.html", error="Internal Server Error"), 500
+
+
+# Create the app instance
+app = create_app()
+
+if __name__ == "__main__":
+    # Use environment variables for configuration
+    host = os.environ.get("FLASK_HOST", "0.0.0.0")
+    port = int(os.environ.get("FLASK_PORT", 5000))
+    debug = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
+    app.run(host=host, port=port, debug=debug)
